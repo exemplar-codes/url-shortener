@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>URL Shortener</title>
+  </head>
+  <body>
+    Welcome to Sanjar's URL shortener. `key=value` should work.
+    <div id="ok" style="color: green; font-size: 24px"></div>
+    <div id="error" style="color: red; font-size: 24px"></div>
+    <!-- Optional: You can add a loading message or styling here -->
+
+    <script>
+      const URL_MAPPINGS = {
+        home: "https://github.com/sanjarcode",
+        // Add more mappings as needed
+      };
+
+      const errorDisplayNode = document.querySelector("#error");
+      const okDisplayNode = document.querySelector("#ok");
+
+      function readParams() {
+        const params = new URLSearchParams(window.location.search);
+        const key = params.get("key");
+        const isActualUrl = getProperUrl(key);
+
+        const finalUrl = isActualUrl ? key : URL_MAPPINGS[key];
+
+        return { key, finalUrl, isActualUrl };
+      }
+
+      function showOnPage() {
+        const { key, finalUrl } = readParams();
+        okDisplayNode.innerHTML = `${key} --> <a href="${finalUrl}">${finalUrl}</a>`;
+        if (!finalUrl) {
+          // Handle invalid or missing key
+          console.error("Invalid key or URL mapping not found.");
+          errorDisplayNode.innerHTML = `${key} is not a valid short id`;
+        }
+      }
+
+      function redirect() {
+        const { key, finalUrl } = readParams();
+        if (finalUrl) redirectToUrlFriendly(finalUrl);
+      }
+
+      //  reusable function
+      /**
+       * Redirects to a specified URL, handling various formats.
+       *
+       * @param {string} inputUrl - The input URL to be redirected.
+       *
+       * ?key=google.com
+       * ?key=https://google.com
+       * ?key=www.google.com
+       * ?key=https://www.google.com
+       */
+      function redirectToUrlFriendly(inputUrl) {
+        window.location.href = getProperUrl(inputUrl);
+      }
+
+      function getProperUrl(inputUrl = "") {
+        // Trim and lowercase the input for consistency
+        const trimmedUrl = inputUrl.trim().toLowerCase();
+        let properUrl = "";
+        // Check if the URL starts with 'http', 'https', or 'www'
+        if (
+          trimmedUrl.startsWith("http://") ||
+          trimmedUrl.startsWith("https://")
+        ) {
+          // If it starts with 'http://' or 'https://', use the provided URL as-is
+          properUrl = trimmedUrl;
+        } else if (trimmedUrl.startsWith("www.")) {
+          // If it starts with 'www.', prepend 'https://' and redirect
+          properUrl = "https://" + trimmedUrl;
+        } else if (trimmedUrl.includes(".")) {
+          // If it contains a dot but doesn't start with 'http', 'https', or 'www'
+          // Assume it's a domain without protocol, prepend 'https://' and redirect
+          properUrl = "http://" + trimmedUrl;
+        }
+
+        return properUrl;
+      }
+
+      window.onload = () => {
+        showOnPage();
+        redirect();
+      };
+    </script>
+  </body>
+</html>
